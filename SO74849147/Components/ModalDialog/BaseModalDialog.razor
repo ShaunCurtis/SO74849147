@@ -1,0 +1,56 @@
+﻿@namespace Blazr.UI
+@implements IModalDialog
+
+@if (this.Display)
+{
+    <CascadingValue Value="(IModalDialog)this">
+        <div class="base-modal-background">
+            <div class="base-modal-content" style="width:@this.Options.Width;" @onclick:stopPropagation="true">
+                <DynamicComponent Type=this.ModalContentType Parameters=this.Options.ControlParameters />
+            </div>
+        </div>
+    </CascadingValue>
+}
+
+@code {
+    public ModalOptions Options { get; protected set; } = new ModalOptions();
+    public bool Display { get; protected set; }
+    public bool IsActive => this.ModalContentType is not null;
+    protected TaskCompletionSource<ModalResult> _ModalTask { get; set; } = new TaskCompletionSource<ModalResult>();
+    protected Type? ModalContentType = null;
+
+    public Task<ModalResult> ShowAsync<TModal>(ModalOptions options) where TModal : IComponent
+    {
+        this.ModalContentType = typeof(TModal);
+        this.Options = options ??= this.Options;
+        this._ModalTask = new TaskCompletionSource<ModalResult>();
+        this.Display = true;
+        InvokeAsync(StateHasChanged);
+        return this._ModalTask.Task;
+    }
+
+    public void Update(ModalOptions? options = null)
+    {
+        this.Options = options ??= this.Options;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async void Dismiss()
+    {
+        this._ModalTask.TrySetResult(ModalResult.Cancel());
+        await Reset();
+    }
+
+    public async void Close(ModalResult result)
+    {
+        this._ModalTask.TrySetResult(result);
+        await Reset();
+    }
+
+    private async Task Reset()
+    {
+        this.Display = false;
+        this.ModalContentType = null;
+        await InvokeAsync(StateHasChanged);
+    }
+}

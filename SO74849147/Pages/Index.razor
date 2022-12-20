@@ -1,0 +1,65 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+<h1 class="mb-5">Hello, world!</h1>
+
+<div class="mt-5 mb-5" >
+    Editor
+</div>
+
+<div class="mt-5 border border-1 border-dark p-1" style="cursor:pointer;" @onclick="() => Edit(CountryModalOptions)">
+    @model.Country
+</div>
+
+<div class="mt-2 border border-1 border-dark p-1" style="cursor:pointer;" @onclick="() => Edit(ContinentModalOptions)">
+    @model.Continent
+</div>
+
+<BaseModalDialog @ref=this.Modal />
+
+@code {
+    private IModalDialog? Modal;
+    private Model model = new();
+
+    private async Task Edit(ModalOptions options)
+    {
+        if (Modal is not null)
+        {
+            var result = await Modal.ShowAsync<TextEditor>(options);
+            // do things
+        }
+    }
+
+    private ModalOptions CountryModalOptions
+    {
+        get
+        {
+            var options = new ModalOptions();
+            options.ControlParameters.Add("Label", "Country");
+            options.ControlParameters.Add("Value", model.Country);
+            options.ControlParameters.Add("ValueChanged", EventCallback.Factory.Create<String>(this, RuntimeHelpers.CreateInferredEventCallback(this, __value => model.Country = __value, model.Country)));
+            options.ControlParameters.Add("ValueExpression", RuntimeHelpers.TypeCheck<System.Linq.Expressions.Expression<System.Func<System.String>>>(() => model.Country));
+            return options;
+        }
+    }
+
+    private ModalOptions ContinentModalOptions
+    {
+        get
+        {
+            var options = new ModalOptions();
+            options.ControlParameters.Add("Label", "Continent");
+            options.ControlParameters.Add("Value", model.Continent);
+            options.ControlParameters.Add("ValueChanged", EventCallback.Factory.Create<String>(this, RuntimeHelpers.CreateInferredEventCallback(this, __value => model.Continent = __value, model.Continent)));
+            options.ControlParameters.Add("ValueExpression", RuntimeHelpers.TypeCheck<System.Linq.Expressions.Expression<System.Func<System.String>>>(() => model.Continent));
+            return options;
+        }
+    }
+
+    public class Model
+    {
+        public string Country { get; set; } = "No Country Set";
+        public string Continent { get; set; } = "No Continent Set";
+    }
+}

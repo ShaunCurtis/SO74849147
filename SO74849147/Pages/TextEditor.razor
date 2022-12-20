@@ -1,0 +1,33 @@
+﻿<div class="mb-3">
+    <label class="form-label small text-muted">@this.Label</label>
+    <div class="input-group">
+        <input class="form-control" value="@this.Value" @oninput=this.Changed />
+        <button class="btn btn-success" @onclick=Exit>Set</button>
+        <button class="btn btn-danger" @onclick=Cancel>Cancel</button>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private IModalDialog? Modal { get; set; }
+    [Parameter] public string Label { get; set; } = "Field";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<string>>? ValueExpression { get; set; }
+
+    private string? _value;
+
+    protected override void OnInitialized()
+        => _value = Value;
+
+    private void Changed(ChangeEventArgs e)
+    => this.ValueChanged.InvokeAsync(e.Value?.ToString() ?? null);
+
+    private void Exit()
+        => Modal?.Close(ModalResult.OK());
+
+    private async Task Cancel()
+    {
+        await this.ValueChanged.InvokeAsync(_value);
+        Modal?.Close(ModalResult.Cancel());
+    }
+}
